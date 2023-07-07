@@ -7,7 +7,7 @@ import java.nio.file.Path
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
-import kotlin.io.path.createDirectories
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.outputStream
@@ -40,8 +40,7 @@ object Stitcher {
             }
         }
 
-        dest.parent.createDirectories()
-        dest.deleteIfExists()
+        dest.createParentDirectories().deleteIfExists()
         BufferedOutputStream(dest.outputStream()).use { s ->
             save(stitched, s)
         }
