@@ -15,8 +15,11 @@ import kotlin.io.path.outputStream
 object Stitcher {
     private const val size = 512
 
-    fun run(tilesDir: Path, dest: Path) {
+    fun run(tilesDir: Path, dest: Path, verbose: Boolean) {
         val tiles = tilesDir.listDirectoryEntries("*.png").map { TileImage.from(it) }
+        if (tiles.isEmpty()) {
+            error("No tiles found in directory $tilesDir")
+        }
         val minX = tiles.minOf { it.position.x }
         val maxX = tiles.maxOf { it.position.x }
         val widthTiles = maxX - minX + 1
@@ -24,13 +27,17 @@ object Stitcher {
         val maxZ = tiles.maxOf { it.position.z }
         val heightTiles = maxZ - minZ + 1
 
+        println("Stitched image will be ${size * widthTiles}x${size * heightTiles}.")
+        println("Processing inputs...")
         val stitched = BufferedImage(size * widthTiles, size * heightTiles, BufferedImage.TYPE_INT_ARGB)
 
         for (tile in tiles) {
             val pos = tile.position
             val startX = (pos.x - minX) * size
             val startZ = (pos.z - minZ) * size
-            println("Processing ${tile.path}...")
+            if (verbose) {
+                println("  Processing ${tile.path}...")
+            }
             val tileImg = ImageIO.read(tile.path.toFile())
             for (dX in 0 until size) {
                 for (dZ in 0 until size) {
@@ -40,6 +47,7 @@ object Stitcher {
             }
         }
 
+        println("Done processing input images, writing output...")
         dest.createParentDirectories().deleteIfExists()
         BufferedOutputStream(dest.outputStream()).use { s ->
             save(stitched, s)
